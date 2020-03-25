@@ -28,11 +28,13 @@ const TreeExample: React.FC = () => {
             }]
         }
     ])
-    console.log(array);
+    const onChange = ()=>{
+        console.log('changing')
+    }
     return (
         <div>
             Tree show
-            <Tree sourceData={array}/>
+            <Tree sourceData={array} onChange={onChange}/>
         </div>
     )
 }

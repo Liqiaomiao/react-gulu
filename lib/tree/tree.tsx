@@ -1,5 +1,6 @@
 import * as React from "react";
 import {scopedClassMaker} from "../helpers/classes";
+import './tree.scss'
 
 interface SourceDataItem {
     text: string,
@@ -8,20 +9,24 @@ interface SourceDataItem {
 }
 
 interface Props {
-    sourceData: SourceDataItem[]
+    sourceData: SourceDataItem[],
+    onChange: () => void
 }
 
-const scopedClassName = scopedClassMaker('fui-tree');
+const scopedClassName = scopedClassMaker('g-ui-tree');
 const sc = scopedClassName;
-const renderItem = (item: SourceDataItem, level = 1) => {
+const renderItem = (item: SourceDataItem,onChange: ()=>void,level = 1) => {
     const classes = {
         [`level-${level}`]: true,
         'item': true
     }
     return <div key={item.value} className={sc(classes)}>
-        {item.text}
+        <div className={sc({'text': true})}>
+            <input type="checkbox" onChange={onChange}/>
+            {item.text}
+        </div>
         {item.children?.map(sub => {
-            return renderItem(sub, level + 1)
+            return renderItem(sub, onChange,level + 1)
         })}
     </div>
 }
@@ -30,7 +35,7 @@ const Tree: React.FC<Props> = (prop) => {
         <div>
             {prop.sourceData?.map(sub => {
                 return (
-                    renderItem(sub, 1)
+                    renderItem(sub,prop.onChange,1)
                 )
             })}
         </div>
