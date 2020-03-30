@@ -1,6 +1,7 @@
 import * as React from "react";
 import {scopedClassMaker} from "../helpers/classes";
 import './tree.scss'
+import {ChangeEventHandler} from "react";
 
 export interface SourceDataItem {
     text: string,
@@ -9,15 +10,16 @@ export interface SourceDataItem {
 }
 type A = {
     selected: string[],
-    multiple: true
+    multiple: true,
+    onChange: (selected:string[])=> void
 }
 type B = {
     selected: string,
-    multiple?: false
+    multiple?: false,
+    onChange: (selected: string) => void
 }
 type Props =  {
     sourceData: SourceDataItem[],
-    onChange: (item:SourceDataItem,bool:boolean) => void
 } & (A|B)
 
 const scopedClassName = scopedClassMaker('g-ui-tree');
@@ -30,9 +32,29 @@ const Tree: React.FC<Props> = (prop) => {
             [`level-${level}`]: true,
             'item': true
         }
+        const onchange:ChangeEventHandler<HTMLInputElement> = (e) => {
+            let boolean = e.target.checked;
+            let currentSelected;
+            if(prop.multiple){
+                if(boolean){
+                    currentSelected = [...prop.selected, item.value]
+                }else{
+                    currentSelected = prop.selected.filter(sub => sub !== item.value)
+                }
+                prop.onChange(currentSelected)
+            }else{
+                if(boolean){
+                    currentSelected = item.value
+                }else{
+                    currentSelected = ''
+                }
+                prop.onChange(currentSelected)
+            }
+
+        }
         return <div key={item.value} className={sc(classes)}>
             <div className={sc({'text': true})}>
-                <input type="checkbox" onChange={(e)=>prop.onChange(item, e.target.checked)} checked={prop.selected.includes(item.value)} />
+                <input type="checkbox" onChange={onchange} checked={prop.multiple?prop.selected.includes(item.value):prop.selected === item.value} />
                 {item.text}
             </div>
             {item.children?.map(sub => {
