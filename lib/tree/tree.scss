@@ -1,0 +1,16 @@
+@import "../style/index";
+
+.g-ui-tree {
+  &-item {
+    line-height: 1.5;
+
+    .g-ui-tree-text {
+      padding-left: 1rem;
+
+      &:hover {
+        background: $border-color;
+      }
+
+    }
+  }
+}
