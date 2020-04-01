@@ -1,7 +1,7 @@
 import * as React from "react";
 import {scopedClassMaker} from "../helpers/classes";
 import './tree.scss'
-import {ChangeEventHandler} from "react";
+import {ChangeEventHandler, useState} from "react";
 
 export interface SourceDataItem {
     text: string,
@@ -28,6 +28,7 @@ const Tree: React.FC<Props> = (prop) => {
     const renderItem = (
         item: SourceDataItem,
         level = 1) => {
+        const [expand,setExpand] = useState(true)
         const classes = {
             [`level-${level}`]: true,
             'item': true
@@ -52,14 +53,29 @@ const Tree: React.FC<Props> = (prop) => {
             }
 
         }
+        const onCollapse = () => {
+            setExpand(false)
+        }
+        const onExpand = () => {
+            setExpand(true)
+        }
         return <div key={item.value} className={sc(classes)}>
             <div className={sc({'text': true})}>
-                <input type="checkbox" onChange={onchange} checked={prop.multiple?prop.selected.includes(item.value):prop.selected === item.value} />
+                <input type="checkbox" onChange={onchange}
+                       checked={prop.multiple ? prop.selected.includes(item.value) : prop.selected === item.value}/>
                 {item.text}
+                {
+                    item.children &&
+                    (expand ?
+                        <span onClick={onCollapse}>-</span> :
+                        <span onClick={onExpand}>+</span>)
+                }
             </div>
-            {item.children?.map(sub => {
-                return renderItem(sub,level + 1)
-            })}
+            <div className={sc({'children':true, 'collapse': !expand})}>
+                {item.children?.map(sub => {
+                    return renderItem(sub, level + 1)
+                })}
+            </div>
         </div>
     }
     return (
