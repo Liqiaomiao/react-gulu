@@ -17,6 +17,9 @@
   &-children{
     transition: 1000ms all;
   }
+  &-gone{
+    display: none;
+  }
 }
 @mixin make-gray($color-level: 1000) {
   @for $i from 1 through $color-level {
