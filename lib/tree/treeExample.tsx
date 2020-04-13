@@ -28,11 +28,12 @@ const TreeExample: React.FC = () => {
             }]
         }
     ])
-    const [selected,setSelected] = useState('1')
+    // const [selected,setSelected] = useState('1')
+    const [selected,setSelected] = useState<string[]>([])
     return (
         <div>
             Tree show
-            <Tree sourceData={array} onChange={(value)=>setSelected(value)} selected={selected} multiple={false} />
+            <Tree sourceData={array} onChange={(value)=>setSelected(value)} selected={selected} multiple={true} />
         </div>
     )
 }
