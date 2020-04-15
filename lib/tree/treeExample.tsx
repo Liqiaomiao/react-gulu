@@ -23,7 +23,7 @@ const TreeExample: React.FC = () => {
                 text: '2.1', value: '2.1',
                 children: [{
                     text:'2.1.1',
-                    value: '2.1.1.3'
+                    value: '2.1.1'
                 }]
             }]
         }
