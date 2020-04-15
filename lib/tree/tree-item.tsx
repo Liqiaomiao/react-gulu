@@ -52,7 +52,6 @@ const TreeItem: React.FC<Props> = (prop) => {
             const transitionendListener = ()=>{
                 if(!divRef.current)return
                 divRef.current.style.height='' // 动画结束后将元素的style 还原
-                divRef.current.classList.remove('g-ui-tree-gone') // 由于style 还原，内容没有收起来，增加class用来控制隐藏
                 divRef.current.removeEventListener('transitionend',transitionendListener)
             }
             divRef.current.addEventListener('transitionend',transitionendListener)
