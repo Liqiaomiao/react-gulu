@@ -30,16 +30,12 @@ const collectChildrenValues = (item: SourceDataItem):any => {
 }
 interface RecursiveArray<T> extends Array<T | RecursiveArray<T>> {}
 
-const flatten = (array: RecursiveArray<string>): string[] => {
-    return  array?.reduce<string[]>((result,current)=>{
-        if(typeof current === 'string'){
-            return result.concat(current)
-        }else{
-            return result.concat(flatten(current))
-        }
-    },[])
-    // let result: string[] = []
-    // array?.forEach(i => {
+const flatten = (array?: RecursiveArray<string>): string[] => {
+    if(!array){return  []}
+    return array.reduce<string[]>((result, current) =>
+        result.concat(typeof current === 'string' ? current : flatten(current)), [])
+    // let result: string[] = []  // 拍平的for循环写法
+    // array.forEach(i => {
     //     if (i instanceof Array) {
     //         result.push(...flatten(i))
     //     } else {
