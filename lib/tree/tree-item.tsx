@@ -26,14 +26,15 @@ const collectChildrenValues = (item: SourceDataItem):any => {
     //     })
     // }
     // return result
-    return flatten(item.children?.map(i=>[i.value,collectChildrenValues(i)]))
+    // let result = flatten(item.children?.map(i=>[i.value,collectChildrenValues(i)]))
+    if(!item.children){return []}
+    return flatten(item.children.map(i=>[i.value,collectChildrenValues(i)]))
 }
 interface RecursiveArray<T> extends Array<T | RecursiveArray<T>> {}
 
-const flatten = (array?: RecursiveArray<string>): string[] => {
-    if(!array){return  []}
-    return array.reduce<string[]>((result, current) =>
-        result.concat(typeof current === 'string' ? current : flatten(current)), [])
+const flatten = (array: RecursiveArray<string>): string[] => {
+    return array?.reduce<string[]>((result, current) =>
+        result.concat(current instanceof Array ? flatten(current): current), [])
     // let result: string[] = []  // 拍平的for循环写法
     // array.forEach(i => {
     //     if (i instanceof Array) {
