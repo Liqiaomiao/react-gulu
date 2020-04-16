@@ -26,7 +26,7 @@ const collectChildrenValues = (item: SourceDataItem):any => {
     //     })
     // }
     // return result
-    return item.children?.map(i=>[i.value,collectChildrenValues(i)])
+    return flatten(item.children?.map(i=>[i.value,collectChildrenValues(i)]))
 }
 interface RecursiveArray<T> extends Array<T | RecursiveArray<T>> {}
 
@@ -57,13 +57,11 @@ const TreeItem: React.FC<Props> = (prop) => {
         let boolean = e.target.checked;
         let currentSelected;
         const childrenValues = collectChildrenValues(item)
-        console.log('childrenValues===',childrenValues);
-        console.log('flatten',flatten(childrenValues))
         if (treeProps.multiple) {
             if (boolean) {
-                currentSelected = [...treeProps.selected, item.value]
+                currentSelected = [...treeProps.selected, item.value, ...childrenValues]
             } else {
-                currentSelected = treeProps.selected.filter(sub => sub !== item.value)
+                currentSelected = treeProps.selected.filter(sub => ![...childrenValues, item.value].includes(sub)) // 取消选中连着子代一起取消选中
             }
             treeProps.onChange(currentSelected)
         } else {
