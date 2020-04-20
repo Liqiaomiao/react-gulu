@@ -11,11 +11,11 @@ interface Props {
     item: SourceDataItem;
     level: number;
     treeProps: TreeProps;
+    onItemChange: (values:string[]|string) => void;
 }
 
 
-
-const collectChildrenValues = (item: SourceDataItem):any => {
+const collectChildrenValues = (item: SourceDataItem): any => {
     // let result:string[] = [] // 递归+ 拍平
     // if(item.children){
     //     item.children.forEach((list)=>{
@@ -27,14 +27,19 @@ const collectChildrenValues = (item: SourceDataItem):any => {
     // }
     // return result
     // let result = flatten(item.children?.map(i=>[i.value,collectChildrenValues(i)]))
-    if(!item.children){return []}
-    return flatten(item.children.map(i=>[i.value,collectChildrenValues(i)]))
+    if (!item.children) {
+        return []
+    }
+    console.log('current=',item)
+    return flatten(item.children.map(i => [i.value, collectChildrenValues(i)]))
 }
-interface RecursiveArray<T> extends Array<T | RecursiveArray<T>> {}
+
+interface RecursiveArray<T> extends Array<T | RecursiveArray<T>> {
+}
 
 const flatten = (array: RecursiveArray<string>): string[] => {
     return array?.reduce<string[]>((result, current) =>
-        result.concat(current instanceof Array ? flatten(current): current), [])
+        result.concat(current instanceof Array ? flatten(current) : current), [])
     // let result: string[] = []  // 拍平的for循环写法
     // array.forEach(i => {
     //     if (i instanceof Array) {
@@ -53,55 +58,69 @@ const TreeItem: React.FC<Props> = (prop) => {
         [`level-${level}`]: true,
         'item': true
     }
-
+    function intersect<T>(array1: T[], array2: T[]): T[] {
+        const result: T[] = []
+        for (let i =0;i<array1.length;i++){
+            if(array2.indexOf(array1[i])>-1){
+                result.push(array1[i])
+            }
+        }
+        return result
+    }
     const onchange: ChangeEventHandler<HTMLInputElement> = (e) => {
         let boolean = e.target.checked;
-        let currentSelected;
-        const childrenValues = collectChildrenValues(item)
+        let currentSelected:string[]|string;
         if (treeProps.multiple) {
             if (boolean) {
-                currentSelected = [...treeProps.selected, item.value, ...childrenValues]
+                currentSelected = [...treeProps.selected, item.value]
+                // intersect(currentSelected, childrenValues)
             } else {
-                currentSelected = treeProps.selected.filter(sub => ![...childrenValues, item.value].includes(sub)) // 取消选中连着子代一起取消选中
+                currentSelected = treeProps.selected.filter(sub => ![item.value].includes(sub)) // 取消选中连着子代一起取消选中
             }
-            treeProps.onChange(currentSelected)
+            prop.onItemChange(currentSelected)
         } else {
             if (boolean) {
                 currentSelected = item.value
             } else {
                 currentSelected = ''
             }
-            treeProps.onChange(currentSelected)
+            prop.onItemChange(currentSelected)
         }
 
     }
+    const onItemchange=(values:string[])=>{
+        const common = intersect(collectChildrenValues(item),values) // item中的子代有被选中
+        if(common.length>0){
+            prop.onItemChange([...values,item.value]) // 向上层层通知，子代被选中所以自己需要被选中
+        }
+    }
     const divRef = useRef<HTMLDivElement>(null)
     useUpdate(expand, () => {
-        if(!divRef.current) return
+        if (!divRef.current) return
         if (expand) { // 展开
             divRef.current.style.height = 'auto'
             let {height} = divRef.current.getBoundingClientRect()
             divRef.current.style.height = '0px'
             divRef.current.getBoundingClientRect() // 起间隔作用
             divRef.current.style.height = `${height}px`
-            const transitionendListener = ()=>{
-                if(!divRef.current)return
-                divRef.current.style.height='' // 动画结束后将元素的style 还原
-                divRef.current.removeEventListener('transitionend',transitionendListener)
+            const transitionendListener = () => {
+                if (!divRef.current) return
+                divRef.current.style.height = '' // 动画结束后将元素的style 还原
+                divRef.current.removeEventListener('transitionend', transitionendListener)
             }
-            divRef.current.addEventListener('transitionend',transitionendListener)
+            divRef.current.addEventListener('transitionend', transitionendListener)
         } else { // 关闭
             let {height} = divRef.current.getBoundingClientRect()
             divRef.current.style.height = `${height}px`
             divRef.current.getBoundingClientRect() // 起间隔作用
             divRef.current.style.height = '0px'
-            const transitionendListener = ()=>{
-                if(!divRef.current)return
-                divRef.current.style.height='' // 动画结束后将元素的style 还原
+            const transitionendListener = () => {
+                if (!divRef.current) return
+                divRef.current.style.height = '' // 动画结束后将元素的style 还原
                 divRef.current.classList.add('g-ui-tree-gone') // 由于style 还原，内容没有收起来，增加class用来控制隐藏
-                divRef.current.removeEventListener('transitionend',transitionendListener)
+                divRef.current.removeEventListener('transitionend', transitionendListener)
             }
-            divRef.current.addEventListener('transitionend',transitionendListener)
+            divRef.current.addEventListener('transitionend', transitionendListener)
         }
     })
     const onCollapse = () => {
@@ -110,11 +129,11 @@ const TreeItem: React.FC<Props> = (prop) => {
     const onExpand = () => {
         setExpand(true)
     }
-    return (<div key={item.value} className={sc(classes)}>
+    return (<div className={sc(classes)} title={`${item.value}`}>
         <div className={sc({'text': true})}>
             <input type="checkbox" onChange={onchange}
                    checked={treeProps.multiple ? treeProps.selected.includes(item.value) : treeProps.selected === item.value}/>
-            {item.text}
+            {item.value}
             {
                 item.children &&
                 (expand ?
@@ -124,7 +143,8 @@ const TreeItem: React.FC<Props> = (prop) => {
         </div>
         <div className={sc({'children': true, 'collapse': !expand})} ref={divRef}>
             {item.children?.map(sub => {
-                return <TreeItem item={sub} level={level + 1} treeProps={treeProps} key={item.value}></TreeItem>
+                return <TreeItem item={sub} level={level + 1} treeProps={treeProps} onItemChange={onItemchange} key={`${sub.value}-item`}
+                ></TreeItem>
             })}
         </div>
     </div>)
