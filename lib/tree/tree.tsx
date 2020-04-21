@@ -4,7 +4,6 @@ import TreeItem from "./tree-item";
 
 const Tree: React.FC<TreeProps> = (prop) => {
     const onItemChange = (selected:string[]|string)=>{
-        console.log('parent == ',selected )
         if(prop.multiple){
             prop.onChange(selected as string[])
         }else{

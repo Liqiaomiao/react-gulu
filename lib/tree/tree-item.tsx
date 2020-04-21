@@ -11,7 +11,7 @@ interface Props {
     item: SourceDataItem;
     level: number;
     treeProps: TreeProps;
-    onItemChange: (values:string[]|string) => void;
+    onItemChange: (values: string[] | string) => void;
 }
 
 
@@ -30,7 +30,6 @@ const collectChildrenValues = (item: SourceDataItem): any => {
     if (!item.children) {
         return []
     }
-    console.log('current=',item)
     return flatten(item.children.map(i => [i.value, collectChildrenValues(i)]))
 }
 
@@ -58,24 +57,26 @@ const TreeItem: React.FC<Props> = (prop) => {
         [`level-${level}`]: true,
         'item': true
     }
+
     function intersect<T>(array1: T[], array2: T[]): T[] {
         const result: T[] = []
-        for (let i =0;i<array1.length;i++){
-            if(array2.indexOf(array1[i])>-1){
+        for (let i = 0; i < array1.length; i++) {
+            if (array2.indexOf(array1[i]) > -1) {
                 result.push(array1[i])
             }
         }
         return result
     }
+
     const onchange: ChangeEventHandler<HTMLInputElement> = (e) => {
         let boolean = e.target.checked;
-        let currentSelected:string[]|string;
+        let currentSelected: string[] | string;
+        const childrenValues = collectChildrenValues(item)
         if (treeProps.multiple) {
             if (boolean) {
-                currentSelected = [...treeProps.selected, item.value]
-                // intersect(currentSelected, childrenValues)
+                currentSelected = [...treeProps.selected, item.value,...childrenValues]
             } else {
-                currentSelected = treeProps.selected.filter(sub => ![item.value].includes(sub)) // 取消选中连着子代一起取消选中
+                currentSelected = treeProps.selected.filter(sub => ![item.value,...childrenValues].includes(sub)) // 取消选中连着子代一起取消选中
             }
             prop.onItemChange(currentSelected)
         } else {
@@ -88,10 +89,17 @@ const TreeItem: React.FC<Props> = (prop) => {
         }
 
     }
-    const onItemchange=(values:string[])=>{
-        const common = intersect(collectChildrenValues(item),values) // item中的子代有被选中
-        if(common.length>0){
-            prop.onItemChange([...values,item.value]) // 向上层层通知，子代被选中所以自己需要被选中
+    const onItemChange = (values: string[]) => {
+        console.log('selected===', values);
+        const common = intersect(collectChildrenValues(item), values) // item中的子代有被选中
+        console.log('item',item.value);
+        if (common.length > 0) {
+            let last = [...values, item.value]
+            last = Array.from(new Set(last))
+            prop.onItemChange(last) // 向上层层通知，子代被选中所以自己需要被选中
+        } else {
+            let removed = values.filter(selected => selected != item.value)
+            prop.onItemChange(removed)
         }
     }
     const divRef = useRef<HTMLDivElement>(null)
@@ -143,7 +151,8 @@ const TreeItem: React.FC<Props> = (prop) => {
         </div>
         <div className={sc({'children': true, 'collapse': !expand})} ref={divRef}>
             {item.children?.map(sub => {
-                return <TreeItem item={sub} level={level + 1} treeProps={treeProps} onItemChange={onItemchange} key={`${sub.value}-item`}
+                return <TreeItem item={sub} level={level + 1} treeProps={treeProps} onItemChange={onItemChange}
+                                 key={`${sub.value}-item`}
                 ></TreeItem>
             })}
         </div>
