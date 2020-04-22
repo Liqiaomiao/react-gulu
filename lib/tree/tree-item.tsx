@@ -57,6 +57,8 @@ const TreeItem: React.FC<Props> = (prop) => {
         [`level-${level}`]: true,
         'item': true
     }
+    const divRef = useRef<HTMLDivElement>(null)
+    const inputRef = useRef<HTMLInputElement>(null)
 
     function intersect<T>(array1: T[], array2: T[]): T[] {
         const result: T[] = []
@@ -74,9 +76,9 @@ const TreeItem: React.FC<Props> = (prop) => {
         const childrenValues = collectChildrenValues(item)
         if (treeProps.multiple) {
             if (boolean) {
-                currentSelected = [...treeProps.selected, item.value,...childrenValues]
+                currentSelected = [...treeProps.selected, item.value, ...childrenValues]
             } else {
-                currentSelected = treeProps.selected.filter(sub => ![item.value,...childrenValues].includes(sub)) // 取消选中连着子代一起取消选中
+                currentSelected = treeProps.selected.filter(sub => ![item.value, ...childrenValues].includes(sub)) // 取消选中连着子代一起取消选中
             }
             prop.onItemChange(currentSelected)
         } else {
@@ -90,19 +92,24 @@ const TreeItem: React.FC<Props> = (prop) => {
 
     }
     const onItemChange = (values: string[]) => {
-        console.log('selected===', values);
+        const childrenValues = collectChildrenValues(item)
         const common = intersect(collectChildrenValues(item), values) // item中的子代有被选中
-        console.log('item',item.value);
         if (common.length > 0) {
             let last = [...values, item.value]
             last = Array.from(new Set(last))
             prop.onItemChange(last) // 向上层层通知，子代被选中所以自己需要被选中
+            if (common.length === childrenValues.length) {
+                inputRef.current!.indeterminate = false
+            } else {
+                inputRef.current!.indeterminate = true
+            }
         } else {
             let removed = values.filter(selected => selected != item.value)
             prop.onItemChange(removed)
+            inputRef.current!.indeterminate = false
         }
     }
-    const divRef = useRef<HTMLDivElement>(null)
+
     useUpdate(expand, () => {
         if (!divRef.current) return
         if (expand) { // 展开
@@ -139,7 +146,7 @@ const TreeItem: React.FC<Props> = (prop) => {
     }
     return (<div className={sc(classes)} title={`${item.value}`}>
         <div className={sc({'text': true})}>
-            <input type="checkbox" onChange={onchange}
+            <input type="checkbox" onChange={onchange} ref={inputRef}
                    checked={treeProps.multiple ? treeProps.selected.includes(item.value) : treeProps.selected === item.value}/>
             {item.value}
             {
